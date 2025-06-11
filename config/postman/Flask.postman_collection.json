@@ -1,0 +1,69 @@
+{
+	"info": {
+		"_postman_id": "f978613b-7613-44ce-a199-ea41736ef5d5",
+		"name": "Flask",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3618524"
+	},
+	"item": [
+		{
+			"name": "upload_file",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "postman-cloud:///1f035e1f-a868-4900-ad90-337d733d3c7c"
+						}
+					]
+				},
+				"url": {
+					"raw": "127.0.0.1/upload",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "uploaded_file",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1/uploads/test_file.txt",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"uploads",
+						"test_file.txt"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload_file(get)",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

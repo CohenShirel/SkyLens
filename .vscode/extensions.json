@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "donjayamanne.git-extension-pack",
+        "github.copilot",
+        "github.copilot-chat",
+        "tamasfe.even-better-toml",
+        "oderwat.indent-rainbow",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "vscode-icons-team.vscode-icons",
+        "alefragnani.numbered-bookmarks",
+        "qwtel.sqlite-viewer",
+        "ms-toolsai.jupyter",
+        
+    ]
+}

@@ -1,0 +1,31 @@
+[project]
+name = "flask_sample"
+version = "0.1.0"
+description = "Sample Flask application"
+readme = "README.md"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi>=0.115.12",
+    "flask==3.1.0",
+    "ipykernel>=6.29.5",
+    "jupyterlab>=4.4.2",
+    "matplotlib>=3.10.3",
+    "notebook>=7.4.2",
+    "numpy>=2.2.6",
+    "pandas>=2.2.3",
+    "pydantic>=2.11.4",
+    "python-multipart>=0.0.20",
+    "torch>=2.7.0",
+    "torchvision>=0.22.0",
+    "uvicorn>=0.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

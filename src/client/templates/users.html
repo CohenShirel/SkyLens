@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Users List{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2><i class="fas fa-users"></i> Users Management</h2>
+    <a href="{{ url_for('add_user') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i> Add New User
+    </a>
+</div>
+
+<div class="card">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                {{ message }}
+                <button class="alert-close"><i class="fas fa-times"></i></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>#{{ user.id }}</td>
+                    <td>
+                        <div class="user-avatar">
+                            {{ user.name[0]|upper }}
+                        </div>
+                        {{ user.name }}
+                    </td>
+                    <td>
+                        {% if user.age %}
+                        <span class="badge">{{ user.age }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{{ url_for('hello', username=user.name) }}" class="btn-icon" title="Greet">
+                            <i class="fas fa-handshake"></i>
+                        </a>
+                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" class="inline-form">
+                            <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if users|length == 0 %}
+    <div class="empty-state">
+        <i class="fas fa-user-slash"></i>
+        <h3>No Users Found</h3>
+        <p>There are currently no users in the system.</p>
+        <a href="{{ url_for('add_user') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add First User
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

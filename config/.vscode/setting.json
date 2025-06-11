@@ -1,0 +1,24 @@
+{
+    "[commit-message]": {
+        "editor.rulers":[
+            72
+        ]
+    },
+    "editor.rulers": [
+        120
+    ],
+    "editor.tabSize": 4,
+    "files.eol": "\n",
+    "files.autoSave": "afterDelay",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "numberedBookmarks.navigateThroughAllFiles": "replace",
+    "numberedBookmarks.saveBookmarksInProject": true,
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.sideBar.location": "right",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "gitlens.rebaseEditor.ordering": "asc",
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+
+}

@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask (debugpy)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "client:app",
+                "FLASK_ENV": "development"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload",
+                "--host=0.0.0.0",
+                "--port=80"
+            ],
+            "jinja": true
+        },
+        {
+            "name": "Python: FastAPI (debugpy)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "server:app",
+                "--host=0.0.0.0",
+                "--port=8000"
+            ],
+            "jinja": true
+        }
+    ]
+}
