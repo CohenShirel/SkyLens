@@ -1,0 +1,2 @@
+C:\Users\AVIGA\hackaton-2025\SkyLens\frames\frame_0000.jpg, 00:00:00.000, 31.78546, 35.190109, 878.317
+C:\Users\AVIGA\hackaton-2025\SkyLens\frames\frame_0001.jpg, 00:00:00.566, 31.78546, 35.190109, 878.317

@@ -89,3 +89,26 @@ def upload_file():
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    video_file = request.files.get("file")
+    srt_file = request.files.get("srt")
+    if not video_file or not srt_file:
+        return jsonify({"error": "Both video and SRT files are required"}), 400
+
+    # Save uploaded files to disk
+    video_path = UPLOAD_FOLDER / video_file.filename
+    srt_path = UPLOAD_FOLDER / srt_file.filename
+    video_file.save(video_path)
+    srt_file.save(srt_path)
+
+    # Import handle_video from extractions_in_threads
+    from extractions_in_threads import handle_video
+    result_json_path = handle_video(video_path, srt_path)
+
+    # Read and return the result JSON
+    import json
+    with open(result_json_path, encoding="utf-8") as f:
+        result_data = json.load(f)
+    return jsonify(result_data)

@@ -1,11 +1,16 @@
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 import shutil
+import sys
+import uuid
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+sys.path.append(str(Path(__file__).parent))
+from extractions_in_threads import handle_video
 
 app = FastAPI()
 app.router.redirect_slashes = False
@@ -18,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIRECTORY = Path("uploaded_files")
+UPLOAD_DIRECTORY = Path("uploaded_files").resolve()
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 class User(BaseModel):
@@ -96,3 +101,78 @@ async def download_file(filename: str):
     if not file_location.is_file():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path=file_location, filename=filename)
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import http_exception_handler
+import traceback
+import logging
+from fastapi import Request
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.error(f"Unhandled error: {exc}")
+    traceback.print_exc()
+    return JSONResponse(status_code=500, content={"detail" : "Internal Server Error", "error": str(exc)})
+
+@app.post("/analyze1")
+async def analyze_video(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    srt: UploadFile = File(...)
+):
+    # Save uploaded files with unique names
+    video_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{file.filename}"
+    srt_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{srt.filename}"
+    with open(video_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    with open(srt_path, "wb") as f:
+        shutil.copyfileobj(srt.file, f)
+
+    # Run your processing in the background
+    def run_analysis():
+        result_path = handle_video(video_path, srt_path)
+        # Optionally, you can do more with result_path (e.g., notify, log, etc.)
+    background_tasks.add_task(run_analysis)
+
+    
+
+    # Return a response (optionally, you can return a result URL or ID)
+    return JSONResponse({"detail": "Processing started", "video": str(video_path), "srt": str(srt_path)})
+
+@app.get("/result/{result_file}")
+async def get_result(result_file: str):
+    result_path = UPLOAD_DIRECTORY / result_file
+    if not result_path.is_file():
+        raise HTTPException(status_code=404, detail="Result not found")
+    with open(result_path, encoding="utf-8") as f:
+        import json
+        data = json.load(f)
+    return JSONResponse(content=data)
+
+
+
+@app.post("/analyze")
+async def analyze_video(
+    file: UploadFile = File(...),
+    srt: UploadFile = File(...)
+):
+    # Save uploaded files with unique names
+    video_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{file.filename}"
+    srt_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{srt.filename}"
+    with open(video_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    with open(srt_path, "wb") as f:
+        shutil.copyfileobj(srt.file, f)
+
+    # Run your processing in the background
+    result_path = handle_video(video_path, srt_path)
+
+    result_path = Path(result_path).resolve()
+        # Optionally, you can do more with result_path (e.g., notify, log, etc.)
+
+    if not result_path.is_file():
+        raise HTTPException(status_code=404, detail="Result not found")
+    with open(result_path, encoding="utf-8") as f:
+        import json
+        data = json.load(f)
+    return JSONResponse(content=data)
