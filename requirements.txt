@@ -2,3 +2,6 @@ fastapi
 uvicorn
 pydantic
 python-multipart
+langchain-community
+opencv-python
+openai

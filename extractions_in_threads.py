@@ -7,6 +7,17 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from utils import parse_srt
 import matrix
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import Runnable
+from langchain.chat_models import ChatOpenAI
+import base64
+from pathlib import Path
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
+from langchain.chat_models import ChatOpenAI
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.documents import Document
+
 
 def extract_frames_with_metadata(video_path, srt_path, frames_dir="frames", frame_interval_sec=3, max_threads=8, txt_output="frames_metadata.txt"):
     os.makedirs(frames_dir, exist_ok=True)
@@ -64,3 +75,75 @@ def handle_video(video_path: Path | str, srt_path: Path | str):
     with open(result_path, "w", encoding="utf-8") as f:
         json.dump(frames_in_matrix, f, ensure_ascii=False, indent=2)
     return str(result_path)
+
+
+def encode_image_to_base64(path: Path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+# Sample data (replace this with your actual list)
+def is_it_suspicious(data: list[list[dict]]) -> bool:
+
+# Helper to encode image
+
+    # Your list of frames
+    data = [
+    {
+        "frame": "frames/frame_0000.png",
+        "timestamp": "12:30:45.123",
+        "lat": 32.109333,
+        "lon": 34.855499,
+        "alt": 500
+    },
+    {
+        "frame": "frames/frame_0001.png",
+        "timestamp": "12:30:46.456",
+        "lat": 32.109500,
+        "lon": 34.855600,
+        "alt": 502
+    }
+    ]
+
+    # Build message with image & metadata
+    vision_messages = []
+
+    for i, entry in enumerate(data):
+        image_data = encode_image_to_base64(entry["frame"])
+        image_url = f"data:image/png;base64,{image_data}"
+
+        meta_info = (
+            f"Frame {i+1} — Timestamp: {entry['timestamp']}, "
+            f"Lat: {entry['lat']}, Lon: {entry['lon']}, Alt: {entry['alt']}"
+        )
+
+        vision_messages.append({
+            "type": "image_url",
+            "image_url": {"url": image_url}
+        })
+        vision_messages.append({
+            "type": "text",
+            "text": meta_info
+        })
+
+        # Add final instruction
+        vision_messages.append({
+        "type": "text",
+        "text": "Analyze this sequence of images and metadata. Does anything seem suspicious or dangerous? Reply only with 'True' if there is any concern, or 'False' if everything looks normal and safe."
+        })
+
+    # Set up GPT-4o / GPT-4 vision model
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+    # 🔗 Create LangChain runnable (it's direct LLM call with vision)
+    response = llm.invoke([HumanMessage(content=vision_messages)])
+
+    result = response.content.strip().lower() == "true"
+
+    # 💬 Output result
+    print("Suspicious?", result)
+
+    return result
+
+
+if __name__ == "__main__":
+    is_it_suspicious(None)
