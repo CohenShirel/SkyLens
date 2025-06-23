@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 import cv2
+import math
 import json
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor 
 from src.utils import parse_srt
@@ -19,6 +20,12 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def frange(start, stop, step):
+    t = start
+    while t <= stop:
+        yield t
+        t += step
 
 # ---------- FRAME EXTRACTION ----------
 
@@ -53,19 +60,39 @@ def extract_frames_with_metadata(
     duration_sec = frame_count / fps
     cap.release()
 
-    if not frame_interval_sec:
-        frame_interval_sec = 0.6 if duration_sec < 12 else 3
+    logger.info(f"Video duration: {duration_sec} seconds")  # Debug output
 
-    num_frames_to_extract = min(len(metadata), int(duration_sec // frame_interval_sec))
-    tasks = [
-        (video_path, frames_dir, i, i * frame_interval_sec, metadata[i])
-        for i in range(num_frames_to_extract)
-    ]
+    if not frame_interval_sec:
+        if duration_sec < 10:
+            frame_interval_sec = 0.5
+        elif duration_sec < 20:
+            frame_interval_sec = 1.0
+        elif duration_sec < 30:
+            frame_interval_sec = 2.0
+        else:
+            frame_interval_sec = 3.0
+
+    # Generate timestamps
+    timestamps = [round(t, 3) for t in frange(0, duration_sec, frame_interval_sec)]
+
+    logger.info(f"Generated timestamps: {timestamps}")  # Debug output
+
+    # Generate timestamps from 0 up to duration_sec (inclusive)
+    timestamps = [round(t, 3) for t in list(
+        frange(0, duration_sec, frame_interval_sec)
+    )]
+    if not math.isclose(timestamps[-1], duration_sec):
+        timestamps.append(duration_sec)
+
+    tasks = []
+    for i, t in enumerate(timestamps):
+        meta_idx = min(i, len(metadata) - 1)
+        tasks.append((video_path, frames_dir, i, t, metadata[meta_idx]))
 
     frames_metadata = []
-    # ---- Use all CPU cores if not set ----
+
     if max_procs is None:
-        max_procs = os.cpu_count() - 1 if os.cpu_count() else 1
+        max_procs = max(os.cpu_count() - 1, 1)
 
     with ProcessPoolExecutor(max_workers=max_procs) as executor:
         for result in executor.map(extract_and_save_frame_mp, tasks, chunksize=2):
@@ -77,6 +104,10 @@ def extract_frames_with_metadata(
         for d in frames_metadata:
             line = f"{d['frame']}, {d['timestamp']}, {d['lat']}, {d['lon']}, {d['alt']}\n"
             f.write(line)
+
+    logger.info(f"len(timestamps): {len(timestamps)}")
+    logger.info(f"timestamps: {timestamps}")
+    logger.info(f"len(metadata): {len(metadata)}")
     return frames_metadata
 
 # ---------- ENCODING ----------
@@ -126,6 +157,8 @@ def is_it_suspicious(data: list[dict]) -> tuple[bool, str, str]:
                 "1. Detect and report any visible weapons (firearms, knives, etc.), unattended objects (bags, packages), or suspicious behavior in public spaces.\n"
                 "2. **Weapon Protocol:**\n"
                 "   - Flag ALL weapons unless held by a clearly identified police/military officer in official uniforms with visible insignia.\n"
+                "   - If a weapon is appears in a public space on the road or anything like it without clear identification:\n"
+                "     - Treat as a confirmed threat if held by an individual in civilian clothing.\n"
                 "   - If a weapon is held by anyone else or uniform is ambiguous, treat as a confirmed threat.\n"
                 "3. **Unattended Object Protocol:**\n"
                 "   - Flag any object left alone (e.g., bag, box) in a public area.\n"
@@ -171,10 +204,11 @@ def is_it_suspicious(data: list[dict]) -> tuple[bool, str, str]:
 
     try:
         logger.info(f"LLM response: {raw}")
+        raw = raw.strip().removeprefix("`").removesuffix("`")
         first_comma = raw.index(",")
         second_comma = raw.index(",", first_comma + 1)
 
-        is_suspicious = raw[:first_comma].strip().lower() == "true"
+        is_suspicious = "true" in raw[:first_comma].strip().lower()
         object_in_question = raw[first_comma + 1 : second_comma].strip() or None
         why_suspicious = raw[second_comma + 1 :].strip() or None
     except ValueError:
