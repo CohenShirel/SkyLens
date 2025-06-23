@@ -379,6 +379,13 @@ function App() {
             </div>
           ) : (
             <div
+              ref={el => {
+              if (el) {
+                el.focus();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+              }}
+              tabIndex={-1}
               style={{
               background: "rgba(255, 255, 255, 0.95)",
               borderRadius: 24,
@@ -568,8 +575,8 @@ function App() {
                     }}>
                     <div style={{ color: "#a53935", fontWeight: "bold" }}>אובייקט חשוד:</div>
                     <div dir="rtl" style={{ color: "#000", fontWeight: "bold", padding: "4px 8px", borderRadius: "4px", flex: 1, textAlign: "center" }}>
-                      <span style={{ display: "inline-block", padding: "0 4px", backgroundColor: "#fdd", marginLeft: 80 }}>
-                      <div style={{ textAlign: "center", flex: 1 }}>
+                      <span style={{ display: "inline-block", padding: "1px 1px", backgroundColor: "#fdd", marginLeft: 80, borderRadius: "15%" }}>
+                      <div style={{ textAlign: "center", flex: 1, padding: "4px 4px",  }}>
                         {event.object_in_question}
                       </div>
                       </span>
@@ -581,8 +588,8 @@ function App() {
                     justifyContent: "space-between"
                   }}>
                     <div style={{ color: "#a53935", fontWeight: "bold"}}>החשד:</div>
-                                  <div dir="rtl" style={{ color: "#000", fontWeight: "bold", padding: "4px 8px", borderRadius: "4px", flex: 1, textAlign: "center" }}>
-                      <span style={{ display: "inline-block", padding: "0 4px", backgroundColor: "#fdd" }}>
+                                  <div dir="rtl" style={{ color: "#000", fontWeight: "bold", flex: 1, textAlign: "center" }}>
+                      <span style={{ fontFamily: "Arial", display: "inline-block", borderRadius: "5%", padding: "6px 6px", backgroundColor: "#fdd" }}>
                       {event.why_suspicious}
                       </span>
                     </div>
@@ -593,35 +600,40 @@ function App() {
                   </div>
                     
                   <button
-                  onClick={() => seekTo(event.timestamp)}
-                  style={{
-                    background: "linear-gradient(90deg, #b71c1c, #d32f2f)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: 12,
-                    padding: "14px 32px",
-                    fontWeight: 700,
-                    fontSize: 16,
-                    cursor: "pointer",
-                    marginTop: 12,
-                    boxShadow: "0 4px 20px rgba(255, 0, 0, 0.25)", // Updated shadow to red
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                    e.currentTarget.style.boxShadow = "0 6px 24px rgba(255, 0, 0, 0.3)"; // Updated shadow to red
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "0 4px 20px rgba(255, 0, 0, 0.25)"; // Updated shadow to red
-                  }}
+                    onClick={() => {
+                      seekTo(event.timestamp);
+                      if (videoRef.current) {
+                        videoRef.current.focus();
+                      }
+                    }}
+                    style={{
+                      background: "linear-gradient(90deg, #b71c1c, #d32f2f)",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 12,
+                      padding: "14px 32px",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      cursor: "pointer",
+                      marginTop: 12,
+                      boxShadow: "0 4px 20px rgba(255, 0, 0, 0.25)", // Updated shadow to red
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "scale(1.05)";
+                      e.currentTarget.style.boxShadow = "0 6px 24px rgba(255, 0, 0, 0.3)"; // Updated shadow to red
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow = "0 4px 20px rgba(255, 0, 0, 0.25)"; // Updated shadow to red
+                    }}
                   >
                     <span>דלג בסרטון לאירוע החשוד</span>
-                  <span style={{ direction: "ltr" }}>({event.timestamp})</span>
+                    <span style={{ direction: "ltr" }}>({event.timestamp})</span>
                   </button>
                 </div>
                 </div>
@@ -891,21 +903,22 @@ function App() {
         )}
         <div className="stats-section">
           <div className="stat-card">
-            <div className="stat-number">{selectedFiles.length}</div>
-            <div className="stat-label">קבצים נבחרים</div>
+            <div className="stat-number">{processingStatus}</div>
+            <div className="stat-label">סטטוס עיבוד</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">{formatFileSize(totalSize)}</div>
             <div className="stat-label">סך הכל נתונים</div>
           </div>
           <div className="stat-card">
+            <div className="stat-number">{selectedFiles.length}</div>
+            <div className="stat-label">קבצים נבחרים</div>
+          </div>
+          <div className="stat-card">
             <div className="stat-number">{uploadedCount}</div>
             <div className="stat-label">הועלו בהצלחה</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number">{processingStatus}</div>
-            <div className="stat-label">סטטוס עיבוד</div>
-          </div>
+
         </div>
       </div>
       {notification && (

@@ -42,6 +42,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
 
     return (
         <div
+            dir="rtl"
             ref={modalRef}
             tabIndex={-1} // Make the div focusable
             style={{
@@ -126,7 +127,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                             left: 10,
                             top: "50%",
                             transform: "translateY(-50%)",
-                            background: current === 0 ? "rgba(0,0,0,0.15)" : "rgba(255,87,34,0.4)",
+                            background: current === 0 ? "rgba(146, 10, 10, 0.15)" : "rgba(255,87,34,0.4)",
                             border: "none",
                             borderRadius: "50%",
                             color: "#fff",
@@ -168,7 +169,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                             right: 10,
                             top: "50%",
                             transform: "translateY(-50%)",
-                            background: current === 0 ? "rgba(0,0,0,0.15)" : "rgba(255,87,34,0.4)",
+                            background:  "rgba(255,87,34,0.4)",
                             border: "none",
                             borderRadius: "50%",
                             color: "#fff",
