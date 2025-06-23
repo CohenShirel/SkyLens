@@ -50,7 +50,7 @@ uv sync
 ## 3. Run the FastAPI Application
 
 ```bash
-uv run fastapi run app.py
+uv run fastapi dev app.py
 ```
 
 ## 4. Access the API

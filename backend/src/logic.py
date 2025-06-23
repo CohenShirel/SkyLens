@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import cv2
 import math
 import json
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor 
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from src.utils import parse_srt
 from src import matrix
 import base64

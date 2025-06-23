@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { analyzeVideoAndSrt } from "./api";
 import { formatFileSize } from "./utils";
 import { SelectedFile, AnalysisResults, AnalysisResult, SuspiciousEvent } from "./types";
 import { StackedImagesGallery } from "./components/StackedImagesGallery";
