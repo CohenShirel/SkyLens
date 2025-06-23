@@ -14,7 +14,7 @@ function App() {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
-  const [notification, setNotification] = useState("");
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "info" | "error" | "warning" } | null>(null);
   const [processingStatus, setProcessingStatus] = useState("ממתין לקבצים");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
@@ -85,7 +85,7 @@ function App() {
       const newFiles = files.filter(
         (file) => !existing.has(file.name + file.size)
       );
-      if (newFiles.length > 0) showNotification(`נוספו ${newFiles.length} קבצים לעיבוד`, "success");
+      if (newFiles.length > 0) showNotification("הסרטון נוסף בהצלחה", "success");
       return [
         ...prev,
         ...newFiles.map((file) => ({
@@ -111,10 +111,22 @@ function App() {
     setSelectedFiles((prev) =>
       prev.map((f, i) => (i === index ? { ...f, srtFile: srt } : f))
     );
+    if (srt) {
+      showNotification("קובץ הכתוביות נוסף בהצלחה", "success");
+    }
   };
 
   // Upload & analyze files
   const uploadAll = async () => {
+    if (selectedFiles.length === 0) {
+      showNotification("לא נבחרו קבצים להעלאה", "warning");
+      return;
+    }
+    if (selectedFiles && selectedFiles[0].file && !selectedFiles[0].srtFile)
+    {
+      showNotification("יש לבחור קובץ SRT עבור הסרטון", "warning");
+      return;
+    }
     setUploading(true);
     setRequestStatus({ title: "מעלה את הסרטון", text: "מעלה את הסרטון... נא להמתין." });
     setProcessingStatus("מעלה");
@@ -132,25 +144,51 @@ function App() {
           idx === i ? { ...f, status: "uploading", progress: 0 } : f
         )
       );
-      // Always get the latest file object from state
       const fileObj = selectedFiles[i];
+      let data = null;
       try {
         if (fileObj && fileObj.file && fileObj.srtFile) {
-          const formData = new FormData();
-          formData.append("file", fileObj.file);
-          formData.append("srt", fileObj.srtFile);
-          setRequestStatus({ title: "מנתח את הסרטון", text: "מנתח את הסרטון... נא להמתין." });
+          // 1. Try cache endpoint first
+          const cacheForm = new FormData();
+          cacheForm.append("video", fileObj.file);
+          cacheForm.append("srt", fileObj.srtFile);
 
-          const response = await fetch("http://localhost:8000/analyze", {
+          const cacheResponse = await fetch("http://localhost:8000/cache", {
             method: "POST",
-            body: formData,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              video: fileObj.file.name,
+              srt: fileObj.srtFile.name,
+            }),
           });
 
-          if (!response.ok) {
-            throw new Error("Upload failed");
+          if (!cacheResponse.ok) {
+            throw new Error("Check if the server is running and the endpoint is correct.");
           }
 
-          const data = await response.json();
+          const cacheResult = await cacheResponse.json();
+
+          if (cacheResult && cacheResult.status && cacheResult.cache) {
+            // Cache hit
+            data = cacheResult.cache;
+          } else {
+            // 2. If no cache, call analyze endpoint
+            setRequestStatus({ title: "מנתח את הסרטון", text: "מנתח את הסרטון... נא להמתין." });
+            const analyzeForm = new FormData();
+            analyzeForm.append("video", fileObj.file);
+            analyzeForm.append("srt", fileObj.srtFile);
+
+            const analyzeResponse = await fetch("http://localhost:8000/analyze", {
+              method: "POST",
+              body: analyzeForm,
+            });
+
+            if (!analyzeResponse.ok) {
+              throw new Error("Analyze failed");
+            }
+            data = await analyzeResponse.json();
+          }
+          console.log("Analysis data:", data);
           setAnalysisResults(data);
           clearInterval(progressInterval);
           setUploading(false);
@@ -175,7 +213,6 @@ function App() {
 
     // Stop infinite progress bar animation
     setProgressBarAnim(100);
-
   };
 
   const resetUploader = () => {
@@ -184,9 +221,12 @@ function App() {
     setProcessingStatus("ממתין לקבצים");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-  const showNotification = (msg: string, type: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(""), 3000);
+  const showNotification = (msg: string, type: "success" | "info" | "error" | "warning") => {
+    setNotification({
+      message: msg,
+      type: type,
+    });
+    setTimeout(() => setNotification(null), 4000);
   };
 
   const totalSize = selectedFiles.length > 0 
@@ -212,13 +252,14 @@ function App() {
   };
 
   // =========== Modern Results Page =============
-// =========== Modern Results Page =============
   if (analysisResults) {
     // Process the nested array structure from the API response
     const suspiciousResults: AnalysisResult[] = [];
-    
-    // First flatten the nested array structure
-    const flattenedResults = analysisResults.flat();
+    console.log("Analysis Results:", analysisResults);
+    // Flatten all arrays from the object values
+    const flattenedResults = Object.values(analysisResults)
+      .flat() // flatten one level (arrays of arrays)
+      .flat(); // flatten again if needed (arrays of arrays of arrays)
     
     // Then filter for suspicious results
     flattenedResults.forEach(item => {
@@ -601,9 +642,8 @@ function App() {
                   <button
                     onClick={() => {
                       seekTo(event.timestamp);
-                      if (videoRef.current) {
-                        videoRef.current.focus();
-                      }
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+
                     }}
                     style={{
                       background: "linear-gradient(90deg, #b71c1c, #d32f2f)",
@@ -631,7 +671,7 @@ function App() {
                       e.currentTarget.style.boxShadow = "0 4px 20px rgba(255, 0, 0, 0.25)"; // Updated shadow to red
                     }}
                   >
-                    <span>דלג בסרטון לאירוע החשוד</span>
+                    <span>דלג לתחילת הקטע החשוד</span>
                     <span style={{ direction: "ltr" }}>({event.timestamp})</span>
                   </button>
                 </div>
@@ -689,7 +729,7 @@ function App() {
           <div className="status-indicators">
             <div className="status-item">
               <div className="status-dot"></div>
-              <span>מערכת פעילה</span>
+                <span>המערכת פעילה</span>
             </div>
             <div className="status-item">
               <span>מחובר</span>
@@ -699,7 +739,7 @@ function App() {
       </header>
       <div className="main-container">
         <div className="upload-section">
-            <h2 className="section-title">📁 העלאת קבצי וידאו לניתוח</h2>
+            <h2 className="section-title">📁 העלאת קובץ וידאו לניתוח</h2>
             <div
             className="upload-zone"
             onClick={handleOpenFileDialog}
@@ -709,7 +749,7 @@ function App() {
             style={{ cursor: uploading ? "not-allowed" : "pointer" }}
             >
             <div className="upload-icon">📹</div>
-            <div className="upload-text">גרור קבצי וידאו לכאן או לחץ לבחירה</div>
+            <div className="upload-text">גרור את קובץ הוידאו לכאן או לחץ לבחירה</div>
             <div className="upload-subtext">
               תומך בפורמטים: MP4, AVI, MOV, MKV | גודל מקסימלי: 2GB לקובץ
             </div>
@@ -903,7 +943,7 @@ function App() {
         <div className="stats-section">
           <div className="stat-card">
             <div className="stat-number">{processingStatus}</div>
-            <div className="stat-label">סטטוס עיבוד</div>
+            <div className="stat-label">סטטוס</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">{formatFileSize(totalSize)}</div>
@@ -915,16 +955,41 @@ function App() {
           </div>
           <div className="stat-card">
             <div className="stat-number">{uploadedCount}</div>
-            <div className="stat-label">הועלו בהצלחה</div>
+            <div className="stat-label">קבצים הועלו בהצלחה</div>
           </div>
 
         </div>
       </div>
       {notification && (
-        <div className="notification" style={{ display: "block" }}>
-          {notification}
+        <div
+          style={{
+            position: "fixed",
+            top: 100,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(0, 0, 0, 0.9)",
+            border: `2px solid ${
+              notification.type === "success"
+          ? "#00ff88"
+          : notification.type === "info"
+          ? "#00bcd4"
+          : notification.type === "warning"
+          ? "#ff9800"
+          : "#f44336"
+            }`,
+            color: "white",
+            padding: "1rem 2rem",
+            borderRadius: 8,
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.5)",
+            zIndex: 1000,
+            display: "block",
+            animation: "slideDown 0.3s ease-out"
+          }}
+          className="notification"
+        >
+          {notification.message}
         </div>
-      )}
+        )}
       {uploading && selectedFiles.length === 2 && processingStatus === "מעלה" && (
         <div
           style={{

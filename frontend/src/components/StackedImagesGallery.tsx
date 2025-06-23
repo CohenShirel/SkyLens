@@ -13,6 +13,7 @@ const COLORS = [
 
 export const StackedImagesGallery: React.FC<StackedImagesGalleryProps> = ({ images }) => {
     const [open, setOpen] = useState(false);
+    const [modalKey, setModalKey] = useState(0); // To force remount for focus
 
     if (!images?.length) return null;
     const maxShow = 5;
@@ -32,7 +33,10 @@ export const StackedImagesGallery: React.FC<StackedImagesGalleryProps> = ({ imag
                 cursor: "pointer",
             }}
             tabIndex={0}
-            onClick={() => setOpen(true)}
+            onClick={() => {
+                setOpen(true);
+                setModalKey((k) => k + 1); // Force GalleryModal remount for focus
+            }}
             title="לחץ כדי להציג את כל התמונות"
         >
             {/* Images Stack */}
@@ -126,12 +130,14 @@ export const StackedImagesGallery: React.FC<StackedImagesGalleryProps> = ({ imag
                     e.currentTarget.style.transform = "scale(1)";
                     e.currentTarget.style.boxShadow = "0 4px 12px rgba(255, 87, 34, 0.3)";
                 }}
+                onClick={() => setOpen(true)}
             >
                 צפה בתמונות
             </div>
 
             {/* Modal */}
             <GalleryModal
+                key={modalKey}
                 images={images}
                 open={open}
                 onClose={() => setOpen(false)}

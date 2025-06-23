@@ -12,6 +12,7 @@ from src.logic import handle_video
 import traceback
 import logging
 from fastapi import Request
+from pydantic import BaseModel
 
 
 load_dotenv()
@@ -31,7 +32,7 @@ app.add_middleware(
 
 UPLOAD_DIRECTORY = Path("uploaded_files").resolve()
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
-
+CACHE_FILE = Path("cache.json").resolve()
 
 @app.get("/")
 async def root():
@@ -44,37 +45,55 @@ async def global_exception_handler(_: Request, exc: Exception):
     traceback.print_exc()
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error", "error": str(exc)})
 
+
+class CacheRequest(BaseModel):
+    video: str
+    srt: str
+
+@app.post("/cache")
+async def cache(request: CacheRequest):
+    cache = {}
+
+    if CACHE_FILE.exists():
+        with open(CACHE_FILE, encoding="utf-8") as f:
+            cache = json.load(f).get(f"{request.video};{request.srt}")
+
+    return {
+        "status": bool(cache),
+        "cache": cache,
+    }
+
 @app.post("/analyze")
-async def analyze_video(file: UploadFile = File(...), srt: UploadFile = File(...)):
+async def analyze_video(video: UploadFile = File(...), srt: UploadFile = File(...)):
     # Save uploaded files with unique names
 
-    if Path("cache.json").exists():
-        with open("cache.json", encoding="utf-8") as f:
-            cache = json.load(f).get(f"{file.filename};{srt.filename}")
+    if CACHE_FILE.exists():
+        with open(CACHE_FILE, encoding="utf-8") as f:
+            cache = json.load(f).get(f"{video.filename};{srt.filename}")
             if cache:
                 return cache
 
-    video_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{file.filename}"
+    video_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{video.filename}"
     srt_path = UPLOAD_DIRECTORY / f"{uuid.uuid4()}_{srt.filename}"
     with open(video_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        shutil.copyfileobj(video.file, f)
     with open(srt_path, "wb") as f:
         shutil.copyfileobj(srt.file, f)
 
     # Run your processing in the background
-    cache = handle_video(video_path, srt_path)
+    result = handle_video(video_path, srt_path)
 
     # Load existing cache if it exists
     cache = {}
-    if Path("cache.json").exists():
-        with open("cache.json", encoding="utf-8") as f:
+    if CACHE_FILE.exists():
+        with open(CACHE_FILE, encoding="utf-8") as f:
             cache = json.load(f)
 
     # Add the new result to the cache
-    cache[f"{file.filename};{srt.filename}"] = cache
+    cache[f"{video.filename};{srt.filename}"] = result
 
     # Save the updated cache back to the file
-    with open("cache.json", "w", encoding="utf-8") as f:
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(cache, f, ensure_ascii=False, indent=4)
 
     return cache

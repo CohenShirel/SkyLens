@@ -15,11 +15,17 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
 }) => {
     const [current, setCurrent] = useState(initialIndex);
     const modalRef = useRef<HTMLDivElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
 
     useEffect(() => {
         if (open) {
             setCurrent(initialIndex);
-            modalRef.current?.focus(); // Focus on the modal when it opens
+            // Focus the image after modal opens
+            setTimeout(() => {
+                imgRef.current?.focus();
+                // Scroll the page to the center of the modal
+                modalRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 0);
         }
     }, [open, initialIndex]);
 
@@ -44,7 +50,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
         <div
             dir="rtl"
             ref={modalRef}
-            tabIndex={-1} // Make the div focusable
+            tabIndex={-1}
             style={{
                 position: "fixed",
                 inset: 0,
@@ -57,9 +63,9 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                 transition: "background 0.4s",
                 backdropFilter: "blur(4px)",
             }}
-            onClick={onClose}
         >
             <div
+                id="gallery-modal-root"
                 style={{
                     position: "relative",
                     background: "rgba(255,255,255,0.07)",
@@ -147,6 +153,8 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                     </button>
                     {/* Image */}
                     <img
+                        ref={imgRef}
+                        tabIndex={0}
                         src={images[current]}
                         alt={`gallery-${current}`}
                         style={{

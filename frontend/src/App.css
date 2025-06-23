@@ -408,21 +408,7 @@ body::before {
     color: #888;
     font-size: 0.9rem;
 }
-.notification {
-    position: fixed;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid #00ff88;
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: none;
-    animation: slideDown 0.3s ease-out;
-}
+
 @keyframes slideDown {
     from {
         opacity: 0;
