@@ -425,7 +425,7 @@ function App() {
                 <div>
                 {suspiciousEvents.length === 1
                 ? "אירוע חשוד זוהה"
-                : `${suspiciousEvents.length} אירועים חשודים זוהו`}
+                : `זוהו ${suspiciousEvents.length} אירועים חשודים`}
                 </div>
                 </div>
                 <style>
