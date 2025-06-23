@@ -1,0 +1,118 @@
+target-version = "py313"
+line-length = 120
+respect-gitignore = true
+indent-width = 4
+extend-include = [
+    "*.py",
+]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "N",
+    "B",
+    "C4",
+    "I",
+    "PT",
+    "RET",
+    "ARG",
+    "PL",
+    "D",
+    "UP",
+    "SIM",
+    "T20",
+    "TRY",
+]
+
+ignore = [
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D203", # Conflicts with D211
+    "D213", # Conflicts with D212
+    "TRY003", # Message inside exception,
+    "I001", # Import outside of __init__.py
+    "T201", # Print found
+    "PLR2004", # Magic number found
+    "D202", # No blank lines allowed after function docstring
+    "D205", # No blank lines allowed after function docstring
+    "D212", # No blank lines allowed after function docstring
+    "D407", # Missing blank line after function decorator
+    "D413", # Missing blank line after class decorator
+    "D414", # Missing blank line after module docstring
+    "D417", # Missing blank line after module docstring
+    "D406", # Missing blank line after function docstring
+    "D401", # Missing blank line after function docstring
+    "PLR0913", # too many parameters in function definition
+    "B008", # too many parameters in function definition
+    "D400", # too many parameters in function definition
+    "D415", # too many parameters in function definition
+]
+
+fixable = [
+    "ALL",
+]
+unfixable = [
+    "ALL",
+]
+
+[lint.per-file-ignores]
+"__init__.py" = [
+    "F401",
+]
+"tests/*" = [
+    "PLR2004"
+]
+
+[lint.flake8-unused-arguments]
+ignore-variadic-names = true
+
+[lint.isort]
+known-third-party = [
+    "enchant",
+]
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.pylint]
+max-args = 5
+max-returns = 6
+max-branches = 12
+max-statements = 50
+max-public-methods = 20
+max-locals = 15
+max-bool-expr = 5
+max-nested-blocks = 5

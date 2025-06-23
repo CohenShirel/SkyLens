@@ -1,20 +1,8 @@
-# Welcome to SkyLens
+# Project Setup and Run Instructions
 
+## Backend
+There is a `README.md` file in the `backend` directory with detailed instructions on how to set up and run the server. You can find it [here](./backend/README.md).
 
-Happy coding!
+## Frontend
+Similarly, the `frontend` directory contains its own `README.md` file with setup and run instructions. You can find it [here](./frontend/README.md).
 
-## How to Run the FastAPI Server
-
-1. Install dependencies:
-
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-2. Start the server:
-
-   ```powershell
-   uvicorn server:app --reload
-   ```
-
-The server will be available at http://127.0.0.1:8000/

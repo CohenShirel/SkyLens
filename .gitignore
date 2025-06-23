@@ -2,9 +2,8 @@
 .idea/
 
 # vscode IDE
-.vscode/*
-!.vscode/extensions.json
-
+.vscode
+videos
 # Custom
 log.txt
 dev.py
@@ -13,7 +12,7 @@ uploads
 uploaded_files
 cache
 output.ipynb
-
+frames_metadata.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -40,6 +39,9 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+result.json
+frames
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
